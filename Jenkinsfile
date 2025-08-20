@@ -38,7 +38,23 @@ pipeline {
             }
         }
 
-            stage('Deploy') {
+        // stage('E2E') {
+        //    agent {
+        //         docker {
+        //             image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+        //             reuseNode true
+        //         }
+        //     }
+
+        //     steps {
+        //         sh '''
+        //             test -f build/index.html
+        //             npm test
+        //         '''
+        //     }
+        // }
+
+        stage('Deploy') {
             agent {
                 docker {
                     image 'node:18-alpine'
@@ -48,8 +64,8 @@ pipeline {
 
             steps {
                 sh '''
-                    npm i netlify-cli -g
-                    netlify --version
+                    npm i netlify-cli
+                    node_modules/.bin/netlify --version
                 '''
             }
         }
