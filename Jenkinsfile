@@ -59,11 +59,11 @@ pipeline {
                 '''
             }
 
-            post {
-                always {
-                    junit 'test-results/junit.xml'
-                }
-            }
+            // post {
+            //     always {
+            //         publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reporterDir: 'reports'])
+            //     }
+            // }
         }
 
         stage('Deploy') {
