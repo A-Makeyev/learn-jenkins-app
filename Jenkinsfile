@@ -75,17 +75,18 @@ pipeline {
         stage('Deploy') {
             agent {
                 docker {
-                    image 'netlify/build:latest'
+                    image 'node:18'
                     reuseNode true
                 }
             }
-
             steps {
                 sh '''
-                    netlify --version
+                    npm ci
+                    npm install netlify-cli
+                    npx netlify --version
                     echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
-                    netlify status --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
-                    netlify deploy --dir=build --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+                    npx netlify status --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+                    npx netlify deploy --dir=build --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
                 '''
             }
         }
