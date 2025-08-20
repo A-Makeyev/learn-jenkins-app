@@ -17,18 +17,17 @@ pipeline {
 
             steps {
                 sh '''
-                    ls -la
                     node --version
                     npm --version
                     npm ci
                     npm run build
-                    ls -la
+                    ls -la build
                 '''
             }
         }
 
         stage('Test') {
-           agent {
+            agent {
                 docker {
                     image 'node:18-alpine'
                     reuseNode true
@@ -41,10 +40,16 @@ pipeline {
                     npm test
                 '''
             }
+
+            post {
+                always {
+                    junit 'test-results/junit.xml'
+                }
+            }
         }
 
         stage('E2E') {
-           agent {
+            agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
                     reuseNode true
@@ -62,7 +67,7 @@ pipeline {
 
             // post {
             //     always {
-            //         publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reporterDir: 'reports'])
+            //         publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'reports'])
             //     }
             // }
         }
@@ -70,26 +75,19 @@ pipeline {
         stage('Deploy') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'netlify/build:latest'
                     reuseNode true
                 }
             }
 
             steps {
                 sh '''
-                    npm i netlify-cli
-                    node_modules/.bin/netlify --version
+                    netlify --version
                     echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status
-                    node_modules/.bin/netlify deploy --dir=build --prod
+                    netlify status --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+                    netlify deploy --dir=build --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            junit 'test-results/junit.xml'
         }
     }
 }
