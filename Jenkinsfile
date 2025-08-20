@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        NETLIFY_SITE_ID = '92bef786-9da6-446c-a054-7f30bda3d912'
+    }
+
     stages {
         stage('Build') {
             agent {
@@ -38,21 +42,29 @@ pipeline {
             }
         }
 
-        // stage('E2E') {
-        //    agent {
-        //         docker {
-        //             image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-        //             reuseNode true
-        //         }
-        //     }
+        stage('E2E') {
+           agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                }
+            }
 
-        //     steps {
-        //         sh '''
-        //             test -f build/index.html
-        //             npm test
-        //         '''
-        //     }
-        // }
+            steps {
+                sh '''
+                    npm i serve
+                    node_modules/.bin/serve -s build &
+                    sleep 10
+                    npx playwright test --reporter=html
+                '''
+            }
+
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false])
+                }
+            }
+        }
 
         stage('Deploy') {
             agent {
@@ -66,6 +78,7 @@ pipeline {
                 sh '''
                     npm i netlify-cli
                     node_modules/.bin/netlify --version
+                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
                 '''
             }
         }
